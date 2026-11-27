@@ -11,6 +11,7 @@ message CreateOrderRequest {
   string productId = 1;
   int32 quantity = 2;
   int32 amount = 3;
+  string idempotencyKey = 4;
 }
 
 message OrderResponse {

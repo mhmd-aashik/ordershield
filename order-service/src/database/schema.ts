@@ -30,6 +30,14 @@ export const orders = pgTable('orders', {
 
   status: orderStatus('status').default('PENDING').notNull(),
 
+  idempotencyKey: varchar('idempotency_key', {
+    length: 128,
+  }).unique(),
+
+  requestHash: varchar('request_hash', {
+    length: 64,
+  }),
+
   createdAt: timestamp('created_at', {
     withTimezone: true,
   })
