@@ -16,13 +16,22 @@ export class OrdersService {
   ) {}
 
   async create(data: { productId: string; quantity: number; amount: number }) {
-    const [order] = await this.db
-      .insert(schema.orders)
-      .values({
-        ...data,
-        status: 'PENDING',
-      })
-      .returning();
+    const order = await this.db.transaction(async (tx) => {
+      const [order] = await tx
+        .insert(schema.orders)
+        .values({
+          ...data,
+          status: 'PENDING',
+        })
+        .returning();
+
+      await tx.insert(schema.sagaInstances).values({
+        orderId: order.id,
+        step: 'STARTED',
+      });
+
+      return order;
+    });
 
     return this.sagaService.execute(order);
   }

@@ -37,3 +37,10 @@ export interface PaymentGrpcService {
     orderId: string;
   }): Observable<PaymentResponse>;
 }
+
+export interface PaymentResponse {
+  id: string;
+  orderId: string;
+  amount: number;
+  status: 'COMPLETED' | 'FAILED' | 'REFUNDED';
+}
