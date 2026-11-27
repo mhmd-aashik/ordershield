@@ -114,6 +114,16 @@ export class OrderSagaService implements OnModuleInit {
       );
     }
 
+    // Development-only crash simulation
+    // Inventory committed, but Saga checkpoint not saved
+    if (process.env.SIMULATE_SAGA_CRASH === 'true') {
+      this.logger.error(
+        `Simulating crash before inventory checkpoint: ${order.id}`,
+      );
+
+      process.exit(1);
+    }
+
     await this.checkpoint(
       order.id,
       'INVENTORY_RESERVED',
@@ -125,13 +135,6 @@ export class OrderSagaService implements OnModuleInit {
     );
 
     this.logger.log(`Inventory reserved: ${reservation.reservationId}`);
-
-    // Development-only crash simulation
-    if (process.env.SIMULATE_SAGA_CRASH === 'true') {
-      this.logger.error('Simulating orchestrator crash');
-
-      process.exit(1);
-    }
 
     return this.processPayment(order, reservation.reservationId);
   }
