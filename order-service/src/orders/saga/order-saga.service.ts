@@ -179,6 +179,14 @@ export class OrderSagaService implements OnModuleInit {
       throw new ServiceUnavailableException('Unexpected payment state');
     }
 
+    if (process.env.SIMULATE_PAYMENT_CRASH === 'true') {
+      this.logger.error(
+        `Simulating crash before payment checkpoint: ${order.id}`,
+      );
+
+      process.exit(1);
+    }
+
     await this.checkpoint(order.id, 'PAYMENT_COMPLETED', 'PAYMENT_COMPLETED', {
       paymentId: payment.id,
       lastError: null,
@@ -201,6 +209,14 @@ export class OrderSagaService implements OnModuleInit {
 
   private async compensateInventory(orderId: string, reservationId: string) {
     this.logger.warn(`Compensation started: ${orderId}`);
+
+    if (process.env.SIMULATE_COMPENSATION_CRASH === 'true') {
+      this.logger.error(
+        `Simulating crash before compensation checkpoint: ${orderId}`,
+      );
+
+      process.exit(1);
+    }
 
     await this.checkpoint(orderId, 'RELEASING_INVENTORY', 'COMPENSATING', {
       reservationId,
