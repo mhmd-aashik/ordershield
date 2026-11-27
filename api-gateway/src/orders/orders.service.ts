@@ -10,16 +10,21 @@ import { status } from '@grpc/grpc-js';
 import { firstValueFrom, Observable } from 'rxjs';
 import { CreateOrderDto } from './dto/create-order.dto.js';
 
-interface OrderGrpcService {
-  createOrder(data: CreateOrderDto): Observable<{
-    id: string;
-    productId: string;
-    quantity: number;
-    amount: number;
-    status: string;
-  }>;
-}
+type CreateOrderRequest = CreateOrderDto & {
+  idempotencyKey: string;
+};
 
+type OrderResponse = {
+  id: string;
+  productId: string;
+  quantity: number;
+  amount: number;
+  status: string;
+};
+
+interface OrderGrpcService {
+  createOrder(data: CreateOrderRequest): Observable<OrderResponse>;
+}
 @Injectable()
 export class OrdersService implements OnModuleInit {
   private orderService: OrderGrpcService;
@@ -34,7 +39,7 @@ export class OrdersService implements OnModuleInit {
       this.client.getService<OrderGrpcService>('OrderService');
   }
 
-  async create(data: CreateOrderDto) {
+  async create(data: CreateOrderRequest) {
     try {
       return await firstValueFrom(this.orderService.createOrder(data));
     } catch (error) {
