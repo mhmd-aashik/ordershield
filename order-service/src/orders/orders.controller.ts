@@ -1,4 +1,12 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Headers,
+  BadRequestException,
+} from '@nestjs/common';
+
 import { OrdersService } from './orders.service.js';
 
 @Controller('orders')
@@ -13,8 +21,21 @@ export class OrdersController {
       quantity: number;
       amount: number;
     },
+    @Headers('idempotency-key')
+    idempotencyKey: string,
   ) {
-    return this.ordersService.create(body);
+    if (
+      typeof idempotencyKey !== 'string' ||
+      !idempotencyKey.trim() ||
+      idempotencyKey.length > 128
+    ) {
+      throw new BadRequestException('A valid Idempotency-Key is required');
+    }
+
+    return this.ordersService.create({
+      ...body,
+      idempotencyKey,
+    });
   }
 
   @Get()
