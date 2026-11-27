@@ -2,6 +2,8 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
+import { resolve } from 'node:path';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,6 +16,17 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.GRPC,
+    options: {
+      package: 'inventory',
+      protoPath: resolve(process.cwd(), '../proto/inventory.proto'),
+      url: `0.0.0.0:${config.get('GRPC_PORT', 50052)}`,
+    },
+  });
+
+  await app.startAllMicroservices();
 
   await app.listen(config.get<number>('PORT', 3002));
 }
